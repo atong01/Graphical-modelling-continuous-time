@@ -75,9 +75,9 @@ class MLPODEF(nn.Module):
         """L2 regularization on all parameters"""
         reg = 0.0
         fc1_weight = self.fc1.weight  # [j * m1, i], m1 = number of hidden nodes
-        reg += torch.sum(fc1_weight**2)
+        reg += torch.sum(fc1_weight ** 2)
         for fc in self.fc2:
-            reg += torch.sum(fc.weight**2)
+            reg += torch.sum(fc.weight ** 2)
         return reg
 
     def fc1_reg(self):
@@ -87,7 +87,7 @@ class MLPODEF(nn.Module):
     def group_weights(self, gamma=0.5):
         """Group lasso weights"""
         fc1_weight = self.fc1.weight.view(self.dims[0], -1, self.dims[0])  # [j, m1, i]
-        weights = torch.sum(fc1_weight**2, dim=1).pow(gamma).data  # [i, j]
+        weights = torch.sum(fc1_weight ** 2, dim=1).pow(gamma).data  # [i, j]
         return weights
 
     def causal_graph(self, w_threshold=0.3):  # [j * m1, i] -> [i, j]
@@ -95,7 +95,7 @@ class MLPODEF(nn.Module):
         d = self.dims[0]
         fc1_weight = self.fc1.weight  # [j * m1, i]
         fc1_weight = fc1_weight.view(d, -1, d)  # [j, m1, i]
-        W = torch.sum(fc1_weight**2, dim=1).pow(0.5)  # [i, j]
+        W = torch.sum(fc1_weight ** 2, dim=1).pow(0.5)  # [i, j]
         W = W.cpu().detach().numpy()  # [i, j]
         W[np.abs(W) < w_threshold] = 0
         return np.round(W, 2)
@@ -148,7 +148,7 @@ def train(func, data, n_steps, times=None, plot_freq=10, horizon=5, l1_reg=0, l2
         """Proximal step"""
         # w shape [j * m1, i]
         wadj = w.view(func.dims[0], -1, func.dims[0])  # [j, m1, i]
-        tmp = torch.sum(wadj**2, dim=1).pow(0.5) - lam * eta
+        tmp = torch.sum(wadj ** 2, dim=1).pow(0.5) - lam * eta
         alpha = torch.clamp(tmp, min=0)
         v = torch.nn.functional.normalize(wadj, dim=1) * alpha[:, None, :]
         w.data = v.view(-1, func.dims[0])
